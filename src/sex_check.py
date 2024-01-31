@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 # sex_check 0.0.1
 
-
 import os
 import dxpy
 import subprocess
-#import pandas as pd
 import logging
 import shutil
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
 
 def run_samtools_idxstat(bamfile, bamfile_prefix):
     """
@@ -21,7 +20,7 @@ def run_samtools_idxstat(bamfile, bamfile_prefix):
 
     Returns:
         str: The name of the output file containing the idxstat results.
-    
+        
     Raises:
         subprocess.CalledProcessError: If an error occurs in the samtools idxstat process.
         Exception: For any other unexpected errors.
@@ -32,7 +31,8 @@ def run_samtools_idxstat(bamfile, bamfile_prefix):
 
         # Run samtools idxstat and capture any errors
         with open(output_file, 'w') as outfile:
-            subprocess.run(['samtools', 'idxstat', bamfile], stdout=outfile, check=True)
+            subprocess.run(['samtools', 'idxstat', bamfile],
+                           stdout=outfile, check=True)
             logging.info("idxstat finished running")
         return output_file
 
@@ -43,8 +43,6 @@ def run_samtools_idxstat(bamfile, bamfile_prefix):
         logging.error("An unexpected error occurred: %s", e)
         raise
 
-
-
 def get_mapped_reads(filename):
     """
     Reads a file containing idxstat output and extracts the mapped reads for chromosomes 1 and Y.
@@ -54,7 +52,7 @@ def get_mapped_reads(filename):
 
     Returns:
         tuple: A tuple containing the number of mapped reads for chromosome 1, chromosome Y, 
-               and the normalized chromosome Y mapped reads (normalized to chromosome 1 reads).
+        and the normalized chromosome Y mapped reads (normalized to chromosome 1 reads).
 
     Raises:
         FileNotFoundError: If the specified file does not exist.
@@ -89,7 +87,6 @@ def get_mapped_reads(filename):
         logging.error("An unexpected error occurred: %s", e)
         raise
 
-
 def get_reported_sex(sample_name):
     """
     Extracts the reported sex from a sample name based on its naming convention.
@@ -117,8 +114,6 @@ def get_reported_sex(sample_name):
     except Exception as e:
         logging.error("An unexpected error occurred while extracting sex from sample name '%s': %s", sample_name, e)
         return "N"
-
-
 
 def get_predicted_sex(chrY, male_threshold, female_threshold):
     """
@@ -148,7 +143,6 @@ def get_predicted_sex(chrY, male_threshold, female_threshold):
         return "U"
 
 
-
 @dxpy.entry_point('main')
 def main(input_bam, index_file, male_threshold, female_threshold):
     """
@@ -160,11 +154,9 @@ def main(input_bam, index_file, male_threshold, female_threshold):
         male_threshold (int): Threshold for determining male based on chromosome Y reads.
         female_threshold (int): Threshold for determining female based on chromosome Y reads.
         
-
     Returns:
         dict: Dictionary of output file links in DNAnexus.
     """
-
 
     inputs = dxpy.download_all_inputs()
 
@@ -188,7 +180,6 @@ def main(input_bam, index_file, male_threshold, female_threshold):
         file.write("Sample\tMapped Reads Chr1\tMapped Reads ChrY\tNormalized ChrY Reads\tReported Sex\tPredicted Sex\n")
         file.write(f"{bam_file_prefix}\t{chr1}\t{chrY}\t{nChrY}\t{reported_sex}\t{predicted_sex}\n")
 
-
     idxstat_output = dxpy.upload_local_file(idxstat_output)
     sex_check_result = dxpy.upload_local_file(out_file_name)
 
@@ -197,5 +188,6 @@ def main(input_bam, index_file, male_threshold, female_threshold):
     output["sex_check_result"] = dxpy.dxlink(sex_check_result)
 
     return output
+
 
 dxpy.run()
