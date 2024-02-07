@@ -1,6 +1,6 @@
 {
   "name": "eggd_sex_check",
-  "title": "eggd_sex_checkv1.0.0",
+  "title": "eggd_sex_check",
   "summary": "Verifies the reported sex of given sample",
   "dxapi": "1.0.0",
   "version": "1.0.0",
@@ -27,14 +27,14 @@
     },
     {
       "name": "male_threshold",
-      "label": "Threshold for male samples",
+      "label": "Chr Y mapped reads threshold for male samples",
       "class": "int",
       "optional": false,
       "help": ""
     },
     {
       "name": "female_threshold",
-      "label": "Threshold for female samples",
+      "label": "Chr Y mapped reads threshold for female samples",
       "class": "int",
       "optional": false,
       "help": ""
