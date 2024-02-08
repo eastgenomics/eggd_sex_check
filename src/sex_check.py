@@ -19,29 +19,16 @@ def run_samtools_idxstat(bamfile, bamfile_prefix):
 
     Returns:
         str: The name of the output file containing the idxstat results.
-        
-    Raises:
-        subprocess.CalledProcessError: If an error occurs in the samtools
-        idxstat process.
-        Exception: For any other unexpected errors.
     """
-    try:
-        # Define the output file name
-        output_file = bamfile_prefix + '_idxstat.tsv'
+    # Define the output file name
+    output_file = bamfile_prefix + '_idxstat.tsv'
 
-        # Run samtools idxstat and capture any errors
-        with open(output_file, 'w') as outfile:
-            subprocess.run(['samtools', 'idxstat', bamfile],
-                           stdout=outfile, check=True)
-            logging.info("idxstat finished running")
-        return output_file
-
-    except subprocess.CalledProcessError as e:
-        logging.error("An error occurred while running samtools idxstat: %s", e)
-        raise
-    except RuntimeError as e:
-        logging.error("A runtime error occurred: %s", e)
-        raise
+    # Run samtools idxstat and capture any errors
+    with open(output_file, 'w') as outfile:
+        subprocess.run(['samtools', 'idxstat', bamfile],
+                        stdout=outfile, check=True)
+        logging.info("idxstat finished running")
+    return output_file
 
 def get_mapped_reads(filename):
     """
@@ -55,39 +42,25 @@ def get_mapped_reads(filename):
         tuple: A tuple containing the number of mapped reads for chromosome 1,
         chromosome Y, and the normalized chromosome Y mapped reads 
         (normalized to chromosome 1 reads).
-
-    Raises:
-        FileNotFoundError: If the specified file does not exist.
-        ValueError: If the file format is incorrect or missing required data.
     """
-    try:
-        chr1_mapped_reads = chrY_mapped_reads = 0
+    chr1_mapped_reads = chrY_mapped_reads = 0
 
-        with open(filename) as file:
-            found_chr1 = found_chrY = False
-            for line in file:
-                if line.startswith("1"):
-                    chr1_mapped_reads = int(line.split("\t")[-2])
-                    found_chr1 = True
-                elif line.startswith("Y"):
-                    chrY_mapped_reads = int(line.split("\t")[-2])
-                    found_chrY = True
+    with open(filename) as file:
+        found_chr1 = found_chrY = False
+        for line in file:
+            if line.startswith("1"):
+                chr1_mapped_reads = int(line.split("\t")[-2])
+                found_chr1 = True
+            elif line.startswith("Y"):
+                chrY_mapped_reads = int(line.split("\t")[-2])
+                found_chrY = True
 
-            if not (found_chr1 and found_chrY):
-                raise ValueError("File does not contain mapped reads for chromosome 1 and/or Y.")
+        if not (found_chr1 and found_chrY):
+            logging.warning("File does not contain mapped reads for chromosome \
+                1 and/or Y. Using 0 instead")
 
-        n_chrY = chrY_mapped_reads / chr1_mapped_reads if chr1_mapped_reads != 0 else 0
-        return chr1_mapped_reads, chrY_mapped_reads, n_chrY
-
-    except FileNotFoundError as e:
-        logging.error("File not found: %s", e)
-        raise
-    except ValueError as e:
-        logging.error("Data error in file: %s", e)
-        raise
-    except RuntimeError as e:
-        logging.error("A runtime error occurred: %s", e)
-        raise
+    n_chrY = chrY_mapped_reads / chr1_mapped_reads if chr1_mapped_reads != 0 else 0
+    return chr1_mapped_reads, chrY_mapped_reads, n_chrY
 
 def get_reported_sex(sample_name):
     """
@@ -187,10 +160,10 @@ def main(input_bam, index_file, male_threshold, female_threshold):
     with open(out_file_name, "w") as file:
         file.write("# plot_type: 'table'\n")
         file.write("# section_name: 'Sex Check Results'\n")
-        file.write("Sample\tMatched\tMapped Reads Chr1\tMapped Reads ChrY\tNormalized ChrY Reads\t\
-                   Reported Sex\tPredicted Sex\n")
-        file.write(f"{bam_file_prefix}\t{reported_sex==predicted_sex}\t{chr1}\t{chrY}\t{nChrY}\t\
-            {reported_sex}\t{predicted_sex}\n")
+        file.write("Sample\tMatched\tMapped Reads Chr1\tMapped Reads ChrY\t\
+                   Normalized ChrY Reads\tReported Sex\tPredicted Sex\n")
+        file.write(f"{bam_file_prefix}\t{reported_sex==predicted_sex}\t{chr1}\t\
+            {chrY}\t{nChrY}\t{reported_sex}\t{predicted_sex}\n")
 
     idxstat_output = dxpy.upload_local_file(idxstat_output)
     sex_check_result = dxpy.upload_local_file(out_file_name)
