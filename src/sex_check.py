@@ -21,7 +21,8 @@ def run_samtools_idxstat(bamfile, bamfile_prefix):
         str: The name of the output file containing the idxstat results.
         
     Raises:
-        subprocess.CalledProcessError: If an error occurs in the samtools idxstat process.
+        subprocess.CalledProcessError: If an error occurs in the samtools
+        idxstat process.
         Exception: For any other unexpected errors.
     """
     try:
@@ -44,14 +45,16 @@ def run_samtools_idxstat(bamfile, bamfile_prefix):
 
 def get_mapped_reads(filename):
     """
-    Reads a file containing idxstat output and extracts the mapped reads for chromosomes 1 and Y.
+    Reads a file containing idxstat output and extracts the mapped reads for
+    chromosomes 1 and Y.
 
     Args:
         filename (str): The path to the idxstat output file.
 
     Returns:
-        tuple: A tuple containing the number of mapped reads for chromosome 1, chromosome Y, 
-        and the normalized chromosome Y mapped reads (normalized to chromosome 1 reads).
+        tuple: A tuple containing the number of mapped reads for chromosome 1,
+        chromosome Y, and the normalized chromosome Y mapped reads 
+        (normalized to chromosome 1 reads).
 
     Raises:
         FileNotFoundError: If the specified file does not exist.
@@ -73,8 +76,8 @@ def get_mapped_reads(filename):
             if not (found_chr1 and found_chrY):
                 raise ValueError("File does not contain mapped reads for chromosome 1 and/or Y.")
 
-        normalized_chrY = chrY_mapped_reads / chr1_mapped_reads if chr1_mapped_reads != 0 else 0
-        return chr1_mapped_reads, chrY_mapped_reads, normalized_chrY
+        n_chrY = chrY_mapped_reads / chr1_mapped_reads if chr1_mapped_reads != 0 else 0
+        return chr1_mapped_reads, chrY_mapped_reads, n_chrY
 
     except FileNotFoundError as e:
         logging.error("File not found: %s", e)
@@ -92,10 +95,12 @@ def get_reported_sex(sample_name):
     Returns 'N' if the sex cannot be determined or is not 'M', 'F', or 'U'.
 
     Args:
-        sample_name (str): The name of the sample, expected to contain the sex information.
+        sample_name (str): The name of the sample, expected to contain the 
+        sex information.
 
     Returns:
-        str: The reported sex extracted from the sample name or 'N' if undetermined or invalid.
+        str: The reported sex extracted from the sample name or 'N' if 
+        undetermined or invalid.
     """
     try:
         parts = sample_name.split('-')
@@ -119,12 +124,15 @@ def get_reported_sex(sample_name):
 
 def get_predicted_sex(chrY, male_threshold, female_threshold):
     """
-    Determines the predicted sex based on the count of chromosome Y reads and defined thresholds.
+    Determines the predicted sex based on the count of chromosome Y reads 
+    and defined thresholds.
 
     Args:
         chrY (float): The count of mapped reads for chromosome Y.
-        male_threshold (float): The threshold count above which the sample is considered male.
-        female_threshold (float): The threshold count below which the sample is considered female.
+        male_threshold (float): The threshold count above which the sample is 
+        considered male.
+        female_threshold (float): The threshold count below which the sample is
+        considered female.
 
     Returns:
         str: The predicted sex ('M' for male, 'F' for female, 'U' for undetermined).
