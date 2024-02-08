@@ -9,11 +9,11 @@ https://documentation.dnanexus.com/.
 <!-- /dx-header -->
 
 ## What does this app do?
-This app determines the sex of a sample based on mapped read counts to chromosomes Y in a given BAM file. It employs thresholds to predict the sex and compares it against the reported sex embedded in the sample name.
+This app determines the sex of a sample based on mapped read counts to chromosomes Y in a given BAM file. It employs thresholds (ie number of reads mapped to chromosome Y) to predict the sex and compares it against the reported sex embedded in the sample name.
 <br></br>
 
 ## What are typical use cases for this app?
-It's particularly useful in quality control steps of sequencing data to confirm the reported sex against genomic data.
+The app can be used as one of the quality control steps of sequencing data to confirm the reported sex against the sex inferred from the genomic data.
 <br></br>
 
 ## What data are required for this app to run?
@@ -44,5 +44,3 @@ dx run eggd_sex_check \
 ```
 Note: Replace file-xxxx and file-yyyy with the actual file IDs for the BAM file and its index file. Adjust male_threshold and female_threshold according to your requirements.
 <br></br>
-
-
