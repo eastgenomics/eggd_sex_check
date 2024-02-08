@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-# sex_check 0.0.1
 
 import os
-import dxpy
 import subprocess
 import logging
 import shutil
+import dxpy
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
@@ -38,9 +37,9 @@ def run_samtools_idxstat(bamfile, bamfile_prefix):
 
     except subprocess.CalledProcessError as e:
         logging.error("An error occurred while running samtools idxstat: %s", e)
-        raise 
-    except Exception as e:
-        logging.error("An unexpected error occurred: %s", e)
+        raise
+    except RuntimeError as e:
+        logging.error("A runtime error occurred: %s", e)
         raise
 
 def get_mapped_reads(filename):
@@ -72,7 +71,7 @@ def get_mapped_reads(filename):
                     found_chrY = True
 
             if not (found_chr1 and found_chrY):
-                raise ValueError("File does not contain required chromosome data.")
+                raise ValueError("File does not contain mapped reads for chromosome 1 and/or Y.")
 
         normalized_chrY = chrY_mapped_reads / chr1_mapped_reads if chr1_mapped_reads != 0 else 0
         return chr1_mapped_reads, chrY_mapped_reads, normalized_chrY
@@ -83,8 +82,8 @@ def get_mapped_reads(filename):
     except ValueError as e:
         logging.error("Data error in file: %s", e)
         raise
-    except Exception as e:
-        logging.error("An unexpected error occurred: %s", e)
+    except RuntimeError as e:
+        logging.error("A runtime error occurred: %s", e)
         raise
 
 def get_reported_sex(sample_name):
@@ -101,18 +100,21 @@ def get_reported_sex(sample_name):
     try:
         parts = sample_name.split('-')
         if len(parts) < 3:
-            logging.warning("Sample name '%s' is too short to determine sex. Returning 'N'.", sample_name)
+            logging.warning("Sample name '%s' is too short to determine sex. \
+                            Returning 'N'.", sample_name)
             return "N"
-        
+
         sex = parts[-2].upper()
         if sex not in ["M", "F", "U"]:
-            logging.warning("Extracted sex '%s' from sample name '%s' is not valid. Returning 'N'.", sex, sample_name)
+            logging.warning("Extracted sex '%s' from sample name '%s' is not valid. \
+                            Returning 'N'.", sex, sample_name)
             return "N"
 
         return sex
 
-    except Exception as e:
-        logging.error("An unexpected error occurred while extracting sex from sample name '%s': %s", sample_name, e)
+    except RuntimeError as e:
+        logging.error("A runtime error occurred while extracting sex from \
+            sample name '%s': %s", sample_name, e)
         return "N"
 
 def get_predicted_sex(chrY, male_threshold, female_threshold):
@@ -128,7 +130,8 @@ def get_predicted_sex(chrY, male_threshold, female_threshold):
         str: The predicted sex ('M' for male, 'F' for female, 'U' for undetermined).
 
     Raises:
-        ValueError: If the thresholds are not logically set (male_threshold should be higher than female_threshold).
+        ValueError: If the thresholds are not logically set
+        (ie male_threshold should be higher than female_threshold).
     """
     # Validate thresholds
     if male_threshold <= female_threshold:
@@ -166,19 +169,20 @@ def main(input_bam, index_file, male_threshold, female_threshold):
     bam_file_name = inputs['input_bam_name'][0]
     bam_file_prefix = inputs['input_bam_prefix'][0].rstrip('_markdup')
 
-    # Fill in your application code here.
     idxstat_output = run_samtools_idxstat(bam_file_name, bam_file_prefix)
     chr1, chrY, nChrY = get_mapped_reads(idxstat_output)
     predicted_sex = get_predicted_sex(chrY, male_threshold, female_threshold)
     reported_sex = get_reported_sex(bam_file_name)
     
-    out_file_name = bam_file_prefix + '_mcq.txt'
+    out_file_name = bam_file_prefix + '_mqc.txt'
 
     with open(out_file_name, "w") as file:
         file.write("# plot_type: 'table'\n")
         file.write("# section_name: 'Sex Check Results'\n")
-        file.write("Sample\tMapped Reads Chr1\tMapped Reads ChrY\tNormalized ChrY Reads\tReported Sex\tPredicted Sex\n")
-        file.write(f"{bam_file_prefix}\t{chr1}\t{chrY}\t{nChrY}\t{reported_sex}\t{predicted_sex}\n")
+        file.write("Sample\tMatched\tMapped Reads Chr1\tMapped Reads ChrY\tNormalized ChrY Reads\t\
+                   Reported Sex\tPredicted Sex\n")
+        file.write(f"{bam_file_prefix}\t{reported_sex==predicted_sex}\t{chr1}\t{chrY}\t{nChrY}\t\
+            {reported_sex}\t{predicted_sex}\n")
 
     idxstat_output = dxpy.upload_local_file(idxstat_output)
     sex_check_result = dxpy.upload_local_file(out_file_name)
