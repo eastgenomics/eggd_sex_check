@@ -68,13 +68,13 @@
     },
     "assetDepends": [
       {
-          "id": "record-Gb95XXQ4021Q7GXXzF33K6k9"
+          "id": "record-Gg2GP0Q4zJKFz8gP3Gf4Q11v"
       },
       {
           "name": "samtools_asset",
-          "version": "1.0.0",
+          "version": "2.0.0",
           "project": "project-Fkb6Gkj433GVVvj73J7x8KbV",
-          "folder": "/app_assets/samtools/samtools_v1.18/"
+          "folder": "/app_assets/samtools/samtools_v1.19.2/"
       }
     ],
     "interpreter": "python3",
