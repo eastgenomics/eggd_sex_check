@@ -19,7 +19,7 @@
       "name": "index_file",
       "label": "Index of BAM file",
       "class": "file",
-      "optional": true,
+      "optional": false,
       "patterns": [
         "*.bai$"
       ],
