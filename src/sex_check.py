@@ -75,25 +75,19 @@ def get_reported_sex(sample_name):
         str: The reported sex extracted from the sample name or 'N' if 
         undetermined or invalid.
     """
-    try:
-        parts = sample_name.split('-')
-        if len(parts) < 3:
-            logging.warning("Sample name '%s' is too short to determine sex. \
-                            Returning 'N'.", sample_name)
-            return "N"
-
-        sex = parts[-2].upper()
-        if sex not in ["M", "F", "U"]:
-            logging.warning("Extracted sex '%s' from sample name '%s' is not valid. \
-                            Returning 'N'.", sex, sample_name)
-            return "N"
-
-        return sex
-
-    except RuntimeError as e:
-        logging.error("A runtime error occurred while extracting sex from \
-            sample name '%s': %s", sample_name, e)
+    parts = sample_name.split('-')
+    if len(parts) < 3:
+        logging.warning("Sample name '%s' is too short to determine sex. \
+                        Returning 'N'.", sample_name)
         return "N"
+
+    sex = parts[-2].upper()
+    if sex not in ["M", "F", "U"]:
+        logging.warning("Extracted sex '%s' from sample name '%s' is not valid. \
+                        Returning 'N'.", sex, sample_name)
+        return "N"
+
+    return sex
 
 def get_predicted_sex(chrY, male_threshold, female_threshold):
     """
