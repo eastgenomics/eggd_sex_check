@@ -27,14 +27,14 @@
     },
     {
       "name": "male_threshold",
-      "label": "cutoff value for number of reads mapped to Chr Y for male samples",
+      "label": "Minimun number of reads mapped to Chr Y for male samples",
       "class": "int",
       "optional": false,
       "help": ""
     },
     {
       "name": "female_threshold",
-      "label": "cutoff value for number of reads mapped to Chr Y for female samples",
+      "label": "Maximun for number of reads mapped to Chr Y for female samples",
       "class": "int",
       "optional": false,
       "help": ""
