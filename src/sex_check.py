@@ -4,6 +4,7 @@ import os
 import subprocess
 import logging
 import shutil
+import json
 import dxpy
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -140,7 +141,7 @@ def main(input_bam, index_file, male_threshold, female_threshold):
 
     shutil.move(inputs['input_bam_path'][0], os.getcwd())
     shutil.move(inputs['index_file_path'][0], os.getcwd())
-    
+
     bam_file_name = inputs['input_bam_name'][0]
     bam_file_prefix = inputs['input_bam_prefix'][0].rstrip('_markdup')
 
@@ -148,16 +149,76 @@ def main(input_bam, index_file, male_threshold, female_threshold):
     chr1, chrY, nChrY = get_mapped_reads(idxstat_output)
     predicted_sex = get_predicted_sex(chrY, male_threshold, female_threshold)
     reported_sex = get_reported_sex(bam_file_name)
-    
-    out_file_name = bam_file_prefix + '_mqc.txt'
+    matched = str(reported_sex==predicted_sex) if reported_sex != "N" else "NA"
+
+    # format output to mqc json
+    data = {
+        bam_file_prefix: {
+            "matched": matched,
+            "reported_sex": reported_sex,
+            "predicted_sex": predicted_sex,
+            "nChrY": nChrY,
+            "mapped_chrY": chrY,
+            "mapped_chr1": chr1
+        }
+    }
+
+    multiqc_config = {
+        "id": "sex_check",
+        "section_name": "Sex Check",
+        "description": "Table comparing reported and predicted sex",
+        "plot_type": "table",
+        "pconfig": {
+            "id": "sex_check_table",
+            "title": "Sex Check Table",
+            "format": "{:.0f}",
+            "min": 0
+        },
+        "headers": {
+            "matched": {
+                "title": "Matched",
+                "description": "Whether reported sex is same as predicted sex",
+                "cond_formatting_rules": {
+                "pass": [{"s_eq": "True"}],
+                "warn": [{"s_eq": "NA"}],
+                "fail": [{"s_eq": "False"}]
+                }
+            },
+            "reported_sex": {
+                "title": "Reported Sex",
+                "description": "Expected sex reported in sample name",
+                "cond_formatting_rules": {
+                "warn": [{"s_eq": "N"}]
+                }
+            },
+            "predicted_sex": {
+                "title": "Predicted Sex",
+                "description": "Sex inferred from mapped_chrY",
+                "cond_formatting_rules": {
+                "warn": [{"s_eq": "N"}]
+                }
+            },
+            "nChrY": {
+                "title": "Normalized ChrY Reads",
+                "description": "Ratio of mapped_chrY:mapped_chr1",
+                "format": "{:.4f}"
+            },
+            "mapped_chrY": {
+                "title": "Mapped Reads ChrY",
+                "description": "Number of reads mapped to chromosome Y"
+            },
+            "mapped_chr1": {
+                "title": "Mapped Reads Chr1",
+                "description": "Number of reads mapped to chromosome 1"
+            }
+        },
+        "data": data
+    }
+
+    out_file_name = bam_file_prefix + '_mqc.json'
 
     with open(out_file_name, "w") as file:
-        file.write("# plot_type: 'table'\n")
-        file.write("# section_name: 'Sex Check Results'\n")
-        file.write("Sample\tMatched\tMapped Reads Chr1\tMapped Reads ChrY\t\
-                   Normalized ChrY Reads\tReported Sex\tPredicted Sex\n")
-        file.write(f"{bam_file_prefix}\t{reported_sex==predicted_sex}\t{chr1}\t\
-            {chrY}\t{nChrY}\t{reported_sex}\t{predicted_sex}\n")
+        json.dump(multiqc_config, file, indent=2)
 
     idxstat_output = dxpy.upload_local_file(idxstat_output)
     sex_check_result = dxpy.upload_local_file(out_file_name)
