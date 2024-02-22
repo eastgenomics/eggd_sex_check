@@ -149,11 +149,12 @@ def main(input_bam, index_file, male_threshold, female_threshold):
     chr1, chrY, nChrY = get_mapped_reads(idxstat_output)
     predicted_sex = get_predicted_sex(chrY, male_threshold, female_threshold)
     reported_sex = get_reported_sex(bam_file_name)
+    matched = str(reported_sex==predicted_sex) if reported_sex != "N" else "NA"
 
     # format output to mqc json
     data = {
         bam_file_prefix: {
-            "matched": str(reported_sex==predicted_sex) if reported_sex != "N" else "NA",
+            "matched": matched,
             "reported_sex": reported_sex,
             "predicted_sex": predicted_sex,
             "nChrY": nChrY,
@@ -192,7 +193,7 @@ def main(input_bam, index_file, male_threshold, female_threshold):
             },
             "predicted_sex": {
                 "title": "Predicted Sex",
-                "description": "Sex infered from number of mapped reads to ChrY",
+                "description": "Sex inferred from mapped_chrY",
                 "cond_formatting_rules": {
                 "warn": [{"s_eq": "N"}]
                 }
