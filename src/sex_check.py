@@ -188,14 +188,14 @@ def main(input_bam, index_file, male_threshold, female_threshold):
                 "title": "Reported Sex",
                 "description": "Expected sex reported in sample name",
                 "cond_formatting_rules": {
-                "warn": [{"s_eq": "N"}]
+                "warn": [{"s_eq": "N"}, {"s_eq": "U"}]
                 }
             },
             "predicted_sex": {
                 "title": "Predicted Sex",
                 "description": "Sex inferred from mapped_chrY",
                 "cond_formatting_rules": {
-                "warn": [{"s_eq": "N"}]
+                "warn": [{"s_eq": "U"}]
                 }
             },
             "nChrY": {
