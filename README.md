@@ -21,8 +21,8 @@ Required input files:
 
 1. A BAM file (.bam),
 2. A corresponding index file (.bai),
-3. Male threshold (int) - A threshold for determining male based on chromosome Y reads.
-4. Female threshold (int) - A threshold for determining female based on chromosome Y reads.
+3. Male threshold (float) - A threshold for determining male based on chromosome Y reads.
+4. Female threshold (float) - A threshold for determining female based on chromosome Y reads.
 
 ## What does this app output?
 This app outputs two main files:

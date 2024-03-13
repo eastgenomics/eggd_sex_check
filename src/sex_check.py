@@ -90,13 +90,12 @@ def get_reported_sex(sample_name):
 
     return sex
 
-def get_predicted_sex(chrY, male_threshold, female_threshold):
+def get_predicted_sex(nChrY, male_threshold, female_threshold):
     """
-    Determines the predicted sex based on the count of chromosome Y reads 
-    and defined thresholds.
+    Determines the predicted sex based on nChrY and defined thresholds.
 
     Args:
-        chrY (float): The count of mapped reads for chromosome Y.
+        nChrY (float): The normalised reads count for chromosome Y.
         male_threshold (float): The threshold count above which the sample is 
         considered male.
         female_threshold (float): The threshold count below which the sample is
@@ -114,9 +113,9 @@ def get_predicted_sex(chrY, male_threshold, female_threshold):
         raise ValueError("Male threshold must be greater than female threshold.")
 
     # Determine sex based on thresholds
-    if chrY >= male_threshold:
+    if nChrY >= male_threshold:
         return "M"
-    elif chrY <= female_threshold:
+    elif nChrY <= female_threshold:
         return "F"
     else:
         return "U"
@@ -147,7 +146,7 @@ def main(input_bam, index_file, male_threshold, female_threshold):
 
     idxstat_output = run_samtools_idxstat(bam_file_name, bam_file_prefix)
     chr1, chrY, nChrY = get_mapped_reads(idxstat_output)
-    predicted_sex = get_predicted_sex(chrY, male_threshold, female_threshold)
+    predicted_sex = get_predicted_sex(nChrY, male_threshold, female_threshold)
     reported_sex = get_reported_sex(bam_file_name)
     matched = str(reported_sex==predicted_sex) if reported_sex != "N" else "NA"
 

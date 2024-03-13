@@ -27,15 +27,15 @@
     },
     {
       "name": "male_threshold",
-      "label": "Minimum number of reads mapped to Chr Y for male samples",
-      "class": "int",
+      "label": "Value above which the sample is considered male",
+      "class": "float",
       "optional": false,
       "help": ""
     },
     {
       "name": "female_threshold",
-      "label": "Maximum number of reads mapped to Chr Y for female samples",
-      "class": "int",
+      "label": "Value below which the sample is considered female",
+      "class": "float",
       "optional": false,
       "help": ""
     }
