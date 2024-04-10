@@ -1,5 +1,4 @@
-"""
-sex_check 1.1.0 test suite
+"""sex_check 1.1.0 test suite
 """
 #!/usr/bin/env python
 
@@ -15,13 +14,13 @@ import dxpy.app_builder
 from dxpy.exceptions import DXAPIError
 
 
-
 src_dir = os.path.join(os.path.dirname(__file__), "..")
 test_resources_dir = os.path.join(src_dir, "test", "resources")
 
+
 def make_inputs():
     """basic inputs with real DNAnexus sample to test app.
-    Using a control sample randomly selected from 
+    Using a control sample randomly selected from
     a CEN run; Thresholds are for testing functionality only.
     """
     return {
@@ -40,6 +39,7 @@ def make_inputs():
             }
         }
     }
+
 
 class TestDXApp(unittest.TestCase):
     """test functionality of app on DNAnexus 
@@ -90,10 +90,10 @@ class TestDXApp(unittest.TestCase):
         self.assertIn("idxstat_output", output)
         self.assertIn("sex_check_result", output)
 
-        #Assert values are valid DNAnexus file links
+        # Assert values are valid DNAnexus file links
         self.assertTrue(dxpy.is_dxlink(output["idxstat_output"]))
         self.assertTrue(dxpy.is_dxlink(output["sex_check_result"]))
 
+
 if __name__ == '__main__':
     unittest.main()
-    

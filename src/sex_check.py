@@ -34,6 +34,7 @@ def run_samtools_idxstat(bamfile, bamfile_prefix):
 
     return output_file
 
+
 def get_mapped_reads(filename):
     """
     Reads a file containing idxstat output and extracts the mapped reads for
@@ -48,7 +49,7 @@ def get_mapped_reads(filename):
                 normalised score)
     """
     chr_1 = chr_y = 0
-    epsilon = 1e-9 #small value to avoid log(0)
+    epsilon = 1e-9  # small value to avoid log(0)
 
     with open(filename, encoding="utf-8") as file:
         for line in file:
@@ -66,6 +67,7 @@ def get_mapped_reads(filename):
     score = -math.log(n_chr_y + epsilon)
 
     return chr_1, chr_y, score
+
 
 def get_reported_sex(sample_name):
     """
@@ -91,6 +93,7 @@ def get_reported_sex(sample_name):
         return "N"
 
     return sex
+
 
 def get_predicted_sex(score, male_threshold, female_threshold):
     """
@@ -144,7 +147,6 @@ def check_sex_match(reported_sex, predicted_sex):
     return str(reported_sex == predicted_sex)
 
 
-
 @dxpy.entry_point('main')
 def main(input_bam, index_file, male_threshold, female_threshold):
     """
@@ -154,8 +156,8 @@ def main(input_bam, index_file, male_threshold, female_threshold):
     Args:
         input_bam (str): The ID of the input BAM file in DNAnexus.
         index_file (str): The ID of the index file associated with the BAM file.
-        male_threshold (float): Value below which the sample is considered male.
-        female_threshold (float): Value above which the sample is considered female.       
+        male_threshold (float): Value below which sample is considered male.
+        female_threshold (float): Value above which sample is considered female.
     Returns:
         dict: Dictionary of output file links in DNAnexus.
     """
