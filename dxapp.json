@@ -4,44 +4,44 @@
   "summary": "Verifies the reported sex of given sample",
   "dxapi": "1.0.0",
   "version": "1.1.0",
-  "whatsNew": "Uses normalised reads count to infer sex",
+  "whatsNew": "Uses normalised reads count (score) to infer sex",
   "properties": {
   "githubRelease": "v1.1.0"
   },
   "inputSpec": [
     {
       "name": "input_bam",
-      "label": "BAM file to run sex check on",
+      "label": "Input BAM",
       "class": "file",
       "optional": false,
       "patterns": [
         "*.bam$"
       ],
-      "help": ""
+      "help": "BAM file to run sex check on"
     },
     {
       "name": "index_file",
-      "label": "Index of BAM file",
+      "label": "Index File",
       "class": "file",
       "optional": false,
       "patterns": [
         "*.bai$"
       ],
-      "help": ""
+      "help": "Index of BAM file"
     },
     {
       "name": "male_threshold",
-      "label": "Value above which the sample is considered male",
+      "label": "Male Threshold",
       "class": "float",
       "optional": false,
-      "help": ""
+      "help": "Value below which the sample is considered male"
     },
     {
       "name": "female_threshold",
-      "label": "Value below which the sample is considered female",
+      "label": "Female Threshold",
       "class": "float",
       "optional": false,
-      "help": ""
+      "help": "Value above which the sample is considered female"
     }
   ],
   "outputSpec": [

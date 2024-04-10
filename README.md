@@ -28,7 +28,7 @@ Required input files:
 This app outputs two main files:
 
 - {prefix}_idxstat.tsv: A file containing the output of samtools idxstat.
-- {prefix}_mqc.json: A MultiQC compatible file summarising the sex check results. This file includes the sample name, mapped reads for chromosomes 1 and Y, normalized chromosome Y reads, reported sex, and predicted sex.
+- {prefix}_mqc.json: A MultiQC compatible file summarising the sex check results. This file includes the sample name, mapped reads for chromosomes 1 and Y, normalised score, reported sex, and predicted sex.
 <br></br>
 
 ## How to run this app from the command
