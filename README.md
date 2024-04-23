@@ -9,11 +9,15 @@ https://documentation.dnanexus.com/.
 <!-- /dx-header -->
 
 ## What does this app do?
-This app determines the sex of a sample based on mapped read counts to chromosomes Y in a given BAM file. It employs thresholds (ie number of reads mapped to chromosome Y) to predict the sex and compares it against the reported sex embedded in the sample name.
+This app determines the sex of a sample based on mapped read counts to chromosomes Y in a given BAM file. It employs thresholds (ie a score proportional to the number of reads mapped to chromosome Y) to predict the sex and compares it against the reported sex embedded in the sample name.
 <br></br>
 
 ## What are typical use cases for this app?
-The app can be used as one of the quality control steps of sequencing data to confirm the reported sex against the sex inferred from the genomic data.
+The app can be used as one of the quality control steps of sequencing data. It serves these key purposes:
+1. Validates reported sex against genotype-inferred sex.
+2. Detects sample swaps
+3. Flags human error in data entry eg misregistration of reported sex
+4. Detects pollution or contamination of samples, which may lead to inaccurate sex determination.
 <br></br>
 
 ## What data are required for this app to run?
@@ -21,8 +25,8 @@ Required input files:
 
 1. A BAM file (.bam),
 2. A corresponding index file (.bai),
-3. Male threshold (float) - A threshold for determining male based on chromosome Y reads.
-4. Female threshold (float) - A threshold for determining female based on chromosome Y reads.
+3. Male threshold (float) - A score below which the sample is considered male.
+4. Female threshold (float) - A score above which the sample is considered female.
 
 ## What does this app output?
 This app outputs two main files:

@@ -7,6 +7,8 @@ import subprocess
 import math
 import shutil
 import json
+import csv
+
 import dxpy
 
 
@@ -40,6 +42,13 @@ def get_mapped_reads(filename):
     Reads a file containing idxstat output and extracts the mapped reads for
     chromosomes 1 and Y. Then calculates a normalised score (-log(chrY/chr1))
 
+    Expected file is structured as described in samtools doc:
+    http://www.htslib.org/doc/samtools-idxstats.html
+    i.e. a tsv file with each line consisting of :
+    RefSeqName, SeqLength, #mappedReads, and #UnmappedReads;
+    N/B line starts without prefix "chr"
+    
+
     Args:
         filename (str): The path to the idxstat output file.
 
@@ -52,19 +61,20 @@ def get_mapped_reads(filename):
     epsilon = 1e-9  # small value to avoid log(0)
 
     with open(filename, encoding="utf-8") as file:
-        for line in file:
-            if line.startswith("1"):
-                chr_1 = int(line.split("\t")[-2])
-            elif line.startswith("Y"):
-                chr_y = int(line.split("\t")[-2])
+        reader = csv.reader(file, delimiter="\t")
+        for line in reader:
+            if line[0] == "1":
+                chr_1 = int(line[2])
+            elif line[0] == "Y":
+                chr_y = int(line[2])
 
     if not chr_1:
         print("No mapped reads for chromosome 1. Using 0 instead.")
     if not chr_y:
         print("No mapped reads for chromosome Y. Using 0 instead.")
 
-    n_chr_y = chr_y / chr_1 if chr_1 != 0 else 0
-    score = -math.log(n_chr_y + epsilon)
+    norm_chr_y = chr_y / chr_1 if chr_1 != 0 else 0
+    score = -math.log(norm_chr_y + epsilon)
 
     return chr_1, chr_y, score
 
@@ -72,6 +82,7 @@ def get_mapped_reads(filename):
 def get_reported_sex(sample_name):
     """
     Extracts the reported sex from a sample name based on its naming convention.
+    e.g. "X12345-GM1234567-23xxxx4-1234-F-12345678"
     Returns 'N' if the sex cannot be determined or is not 'M', 'F', or 'U'.
 
     Args:
@@ -98,11 +109,11 @@ def get_reported_sex(sample_name):
 def get_predicted_sex(score, male_threshold, female_threshold):
     """
     Determines the predicted sex based on score and defined thresholds.
-    N/B: Higher score = fewer reads
+    N/B: Higher score = fewer proportion of reads mapped to chr Y
 
     Args:
         score (float): The normalised reads count for chromosome Y.
-        male_threshold (float): The threshold below which the sample is 
+        male_threshold (float): The threshold below which the sample is
         considered male.
         female_threshold (float): The threshold above which the sample is
         considered female.
@@ -254,4 +265,5 @@ def main(input_bam, index_file, male_threshold, female_threshold):
     return output
 
 
-dxpy.run()
+if __name__ == "__main__":
+    dxpy.run()

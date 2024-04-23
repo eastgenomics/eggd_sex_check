@@ -1,4 +1,7 @@
-"""sex_check 1.1.0 test suite
+"""sex_check 1.1.0 integration test suite
+
+This test validates the functionality of the app as a whole on the DNAnexus 
+platform.
 """
 #!/usr/bin/env python
 
@@ -40,9 +43,8 @@ def make_inputs():
         }
     }
 
-
 class TestDXApp(unittest.TestCase):
-    """test functionality of app on DNAnexus 
+    """test functionality of app on DNAnexus
     """
     @classmethod
     def setUpClass(cls):
