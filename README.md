@@ -15,9 +15,9 @@ This app determines the sex of a sample based on mapped read counts to chromosom
 ## What are typical use cases for this app?
 The app can be used as one of the quality control steps of sequencing data. It serves these key purposes:
 1. Validates reported sex against genotype-inferred sex.
-2. Detects sample swaps
+2. Detects male<->female sample swaps
 3. Flags human error in data entry eg misregistration of reported sex
-4. Detects pollution or contamination of samples, which may lead to inaccurate sex determination.
+4. Detects contamination of samples, which may lead to inaccurate sex determination.
 <br></br>
 
 ## What data are required for this app to run?
