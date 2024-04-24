@@ -43,6 +43,7 @@ def make_inputs():
         }
     }
 
+
 class TestDXApp(unittest.TestCase):
     """test functionality of app on DNAnexus
     """

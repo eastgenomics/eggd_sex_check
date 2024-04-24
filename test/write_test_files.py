@@ -42,6 +42,7 @@ Y\t70\t60\t10
 Z\t50\t0\t50
 """
 
+
 def write_test_data(directory, filename, data):
     """
     Write test data to a file.

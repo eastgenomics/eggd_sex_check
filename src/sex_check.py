@@ -47,7 +47,6 @@ def get_mapped_reads(filename):
     i.e. a tsv file with each line consisting of :
     RefSeqName, SeqLength, #mappedReads, and #UnmappedReads;
     N/B line starts without prefix "chr"
-    
 
     Args:
         filename (str): The path to the idxstat output file.

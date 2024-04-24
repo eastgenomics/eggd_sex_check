@@ -189,7 +189,6 @@ class TestCheckSexMatch(unittest.TestCase):
     """
     Unit test for the function check_sex_match. 
     """
-
     def test_unknown_reported_sex(self):
         """Test case for when the reported sex is unknown."""
         self.assertEqual(check_sex_match("N", "M"), "NA")
@@ -201,7 +200,7 @@ class TestCheckSexMatch(unittest.TestCase):
         self.assertEqual(check_sex_match("F", "F"), "True")
 
     def test_non_matching_sex(self):
-        """Test case for when the reported sex does not match the predicted sex."""
+        """Test case for sex mismatch."""
         self.assertEqual(check_sex_match("M", "F"), "False")
         self.assertEqual(check_sex_match("F", "M"), "False")   
 
