@@ -1,13 +1,15 @@
+"""source code for eggd_sex_check
+"""
 #!/usr/bin/env python
 
 import os
 import subprocess
-import logging
+import math
 import shutil
 import json
-import dxpy
+import csv
 
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+import dxpy
 
 
 def run_samtools_idxstat(bamfile, bamfile_prefix):
@@ -25,47 +27,61 @@ def run_samtools_idxstat(bamfile, bamfile_prefix):
     output_file = bamfile_prefix + '_idxstat.tsv'
 
     # Run samtools idxstat and capture any errors
-    with open(output_file, 'w') as outfile:
-        subprocess.run(['samtools', 'idxstat', bamfile],
-                        stdout=outfile, check=True)
-        logging.info("idxstat finished running")
+    with open(output_file, 'w', encoding="utf-8") as outfile:
+        subprocess.run(
+            ['samtools', 'idxstat', bamfile],
+            stdout=outfile, check=True
+            )
+    print("samtools finished running successfully")
+
     return output_file
+
 
 def get_mapped_reads(filename):
     """
     Reads a file containing idxstat output and extracts the mapped reads for
-    chromosomes 1 and Y.
+    chromosomes 1 and Y. Then calculates a normalised score (-log(chrY/chr1))
+
+    Expected file is structured as described in samtools doc:
+    http://www.htslib.org/doc/samtools-idxstats.html
+    i.e. a tsv file with each line consisting of :
+    RefSeqName, SeqLength, #mappedReads, and #UnmappedReads;
+    N/B line starts without prefix "chr"
 
     Args:
         filename (str): The path to the idxstat output file.
 
     Returns:
-        tuple: A tuple containing the number of mapped reads for chromosome 1,
-        chromosome Y, and the normalized chromosome Y mapped reads 
-        (normalized to chromosome 1 reads).
+        tuple: (number of mapped reads for chromosome 1,
+                number of mapped reads for chromosome Y,
+                normalised score)
     """
-    chr1_mapped_reads = chrY_mapped_reads = 0
+    chr_1 = chr_y = 0
+    epsilon = 1e-9  # small value to avoid log(0)
 
-    with open(filename) as file:
-        found_chr1 = found_chrY = False
-        for line in file:
-            if line.startswith("1"):
-                chr1_mapped_reads = int(line.split("\t")[-2])
-                found_chr1 = True
-            elif line.startswith("Y"):
-                chrY_mapped_reads = int(line.split("\t")[-2])
-                found_chrY = True
+    with open(filename, encoding="utf-8") as file:
+        reader = csv.reader(file, delimiter="\t")
+        for line in reader:
+            if line[0] == "1":
+                chr_1 = int(line[2])
+            elif line[0] == "Y":
+                chr_y = int(line[2])
 
-        if not (found_chr1 and found_chrY):
-            logging.warning("File does not contain mapped reads for chromosome \
-                1 and/or Y. Using 0 instead")
+    if not chr_1:
+        print("No mapped reads for chromosome 1. Using 0 instead.")
+    if not chr_y:
+        print("No mapped reads for chromosome Y. Using 0 instead.")
 
-    n_chrY = chrY_mapped_reads / chr1_mapped_reads if chr1_mapped_reads != 0 else 0
-    return chr1_mapped_reads, chrY_mapped_reads, n_chrY
+    norm_chr_y = chr_y / chr_1 if chr_1 != 0 else 0
+    score = -math.log(norm_chr_y + epsilon)
+
+    return chr_1, chr_y, score
+
 
 def get_reported_sex(sample_name):
     """
     Extracts the reported sex from a sample name based on its naming convention.
+    e.g. "X12345-GM1234567-23xxxx4-1234-F-12345678"
     Returns 'N' if the sex cannot be determined or is not 'M', 'F', or 'U'.
 
     Args:
@@ -78,61 +94,80 @@ def get_reported_sex(sample_name):
     """
     parts = sample_name.split('-')
     if len(parts) < 3:
-        logging.warning("Sample name '%s' is too short to determine sex. \
-                        Returning 'N'.", sample_name)
+        print(f"{sample_name} is too short to determine sex. Returning N")
         return "N"
 
     sex = parts[-2].upper()
     if sex not in ["M", "F", "U"]:
-        logging.warning("Extracted sex '%s' from sample name '%s' is not valid. \
-                        Returning 'N'.", sex, sample_name)
+        print(f"Extracted {sex} from {sample_name} is invalid. Returning N")
         return "N"
 
     return sex
 
-def get_predicted_sex(chrY, male_threshold, female_threshold):
+
+def get_predicted_sex(score, male_threshold, female_threshold):
     """
-    Determines the predicted sex based on the count of chromosome Y reads 
-    and defined thresholds.
+    Determines the predicted sex based on score and defined thresholds.
+    N/B: Higher score = fewer proportion of reads mapped to chr Y
 
     Args:
-        chrY (float): The count of mapped reads for chromosome Y.
-        male_threshold (float): The threshold count above which the sample is 
+        score (float): The normalised reads count for chromosome Y.
+        male_threshold (float): The threshold below which the sample is
         considered male.
-        female_threshold (float): The threshold count below which the sample is
+        female_threshold (float): The threshold above which the sample is
         considered female.
 
     Returns:
-        str: The predicted sex ('M' for male, 'F' for female, 'U' for undetermined).
+        str: The predicted sex ('M' for male, 'F' for female, 'U' for unknown).
 
     Raises:
         ValueError: If the thresholds are not logically set
-        (ie male_threshold should be higher than female_threshold).
+        (ie male_threshold should be lower than female_threshold).
     """
     # Validate thresholds
-    if male_threshold <= female_threshold:
-        raise ValueError("Male threshold must be greater than female threshold.")
+    if male_threshold >= female_threshold:
+        raise ValueError("Male threshold must be less than female threshold.")
 
     # Determine sex based on thresholds
-    if chrY >= male_threshold:
+    if score <= male_threshold:
         return "M"
-    elif chrY <= female_threshold:
+    elif score >= female_threshold:
         return "F"
     else:
         return "U"
 
 
+def check_sex_match(reported_sex, predicted_sex):
+    """
+    Checks if the predicted sex matches the reported sex, handling cases where
+    reported sex is unknown.
+
+    Args:
+        reported_sex (str): The reported sex.
+        predicted_sex (str): The predicted sex.
+
+    Returns:
+        str: "True" if predicted sex matches reported sex, "False" otherwise.
+             "NA" if reported sex is "N" or "U".
+    """
+
+    if reported_sex in ["N", "U"]:
+        return "NA"
+
+    return str(reported_sex == predicted_sex)
+
+
 @dxpy.entry_point('main')
 def main(input_bam, index_file, male_threshold, female_threshold):
     """
-    Main function for the DNAnexus app to perform sex determination based on BAM file data.
+    Main function for the DNAnexus app to perform sex determination
+    based on BAM file data.
 
     Args:
         input_bam (str): The ID of the input BAM file in DNAnexus.
         index_file (str): The ID of the index file associated with the BAM file.
-        male_threshold (int): Threshold for determining male based on chromosome Y reads.
-        female_threshold (int): Threshold for determining female based on chromosome Y reads.
-        
+        male_threshold (float): Value below which sample is considered male.
+        female_threshold (float): Value above which sample is considered female.
     Returns:
         dict: Dictionary of output file links in DNAnexus.
     """
@@ -146,10 +181,10 @@ def main(input_bam, index_file, male_threshold, female_threshold):
     bam_file_prefix = inputs['input_bam_prefix'][0].rstrip('_markdup')
 
     idxstat_output = run_samtools_idxstat(bam_file_name, bam_file_prefix)
-    chr1, chrY, nChrY = get_mapped_reads(idxstat_output)
-    predicted_sex = get_predicted_sex(chrY, male_threshold, female_threshold)
+    chr_1, chr_y, score = get_mapped_reads(idxstat_output)
+    predicted_sex = get_predicted_sex(score, male_threshold, female_threshold)
     reported_sex = get_reported_sex(bam_file_name)
-    matched = str(reported_sex==predicted_sex) if reported_sex != "N" else "NA"
+    matched = check_sex_match(reported_sex, predicted_sex)
 
     # format output to mqc json
     data = {
@@ -157,9 +192,9 @@ def main(input_bam, index_file, male_threshold, female_threshold):
             "matched": matched,
             "reported_sex": reported_sex,
             "predicted_sex": predicted_sex,
-            "nChrY": nChrY,
-            "mapped_chrY": chrY,
-            "mapped_chr1": chr1
+            "score": score,
+            "mapped_chrY": chr_y,
+            "mapped_chr1": chr_1
         }
     }
 
@@ -171,8 +206,7 @@ def main(input_bam, index_file, male_threshold, female_threshold):
         "pconfig": {
             "id": "sex_check_table",
             "title": "Sex Check Table",
-            "format": "{:.0f}",
-            "min": 0
+            "format": "{:.0f}"
         },
         "headers": {
             "matched": {
@@ -193,14 +227,14 @@ def main(input_bam, index_file, male_threshold, female_threshold):
             },
             "predicted_sex": {
                 "title": "Predicted Sex",
-                "description": "Sex inferred from mapped_chrY",
+                "description": "Sex inferred from normalised score",
                 "cond_formatting_rules": {
                 "warn": [{"s_eq": "U"}]
                 }
             },
-            "nChrY": {
-                "title": "Normalized ChrY Reads",
-                "description": "Ratio of mapped_chrY:mapped_chr1",
+            "score": {
+                "title": "Normalised ChrY Reads",
+                "description": "Negative log of mapped_chrY/mapped_chr1",
                 "format": "{:.4f}"
             },
             "mapped_chrY": {
@@ -217,7 +251,7 @@ def main(input_bam, index_file, male_threshold, female_threshold):
 
     out_file_name = bam_file_prefix + '_mqc.json'
 
-    with open(out_file_name, "w") as file:
+    with open(out_file_name, "w", encoding="utf-8") as file:
         json.dump(multiqc_config, file, indent=2)
 
     idxstat_output = dxpy.upload_local_file(idxstat_output)
@@ -230,4 +264,5 @@ def main(input_bam, index_file, male_threshold, female_threshold):
     return output
 
 
-dxpy.run()
+if __name__ == "__main__":
+    dxpy.run()
