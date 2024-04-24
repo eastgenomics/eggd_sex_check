@@ -9,7 +9,7 @@ https://documentation.dnanexus.com/.
 <!-- /dx-header -->
 
 ## What does this app do?
-This app determines the sex of a sample based on mapped read counts to chromosomes Y in a given BAM file. It employs thresholds (ie a score proportional to the number of reads mapped to chromosome Y) to predict the sex and compares it against the reported sex embedded in the sample name.
+This app determines the sex of a sample based on mapped read counts to chromosomes Y in a given BAM file. It employs thresholds (ie a score inversely proportional to the number of reads mapped to chromosome Y) to predict the sex and compares it against the reported sex embedded in the sample name.
 <br></br>
 
 ## What are typical use cases for this app?

@@ -25,7 +25,7 @@ To run the integration tests on the DNAnexus platform, execute the `test_dxapp.p
 <br><br>
 
 
-## Contributing
+## Contributions
 
 Contributions to the test suite are welcome! If you encounter any issues or have suggestions for improving the tests, feel free to open an issue or submit a pull request.
 <br><br>
