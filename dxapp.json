@@ -67,7 +67,7 @@
   "runSpec": {
     "timeoutPolicy": {
       "*": {
-        "hours": 48
+        "hours": 3
       }
     },
     "assetDepends": [
