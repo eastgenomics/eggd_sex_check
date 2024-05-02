@@ -233,7 +233,7 @@ def main(input_bam, index_file, male_threshold, female_threshold):
                 }
             },
             "score": {
-                "title": "Normalised ChrY Reads",
+                "title": "Score",
                 "description": "Negative log of mapped_chrY/mapped_chr1",
                 "format": "{:.4f}"
             },
