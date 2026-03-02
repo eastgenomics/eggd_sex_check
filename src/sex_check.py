@@ -62,9 +62,9 @@ def get_mapped_reads(filename):
     with open(filename, encoding="utf-8") as file:
         reader = csv.reader(file, delimiter="\t")
         for line in reader:
-            if line[0] == "1":
+            if line[0] == "1" or line[0] == "chr1":
                 chr_1 = int(line[2])
-            elif line[0] == "Y":
+            elif line[0] == "Y" or line[0] == "chrY":
                 chr_y = int(line[2])
 
     if not chr_1:
