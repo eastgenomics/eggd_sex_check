@@ -78,22 +78,21 @@ def get_mapped_reads(filename):
     return chr_1, chr_y, score
 
 
-def get_reported_sex(bamfile):
+def get_reported_sex(sample_name):
     """
-    Extracts the reported sex from a filename based on its naming convention.
-    e.g. "X12345-GM1234567-23xxxx4-1234-F-12345678.bam"
-    or "X12345-GM1234567-23xxxx4-1234-F.bam" for TSO500
+    Extracts the reported sex from a sample name based on its naming convention.
+    e.g. "X12345-GM1234567-23xxxx4-1234-F-12345678"
+    or "X12345-GM1234567-23xxxx4-1234-F" for TSO500
     Returns 'N' if the sex cannot be determined or is not 'M', 'F', or 'U'.
 
     Args:
-        bamfile (str): The name of the bam file, expected to contain the 
+        sample_name (str): The name of the sample, expected to contain the 
         sex information.
 
     Returns:
         str: The reported sex extracted from the sample name or 'N' if 
         undetermined or invalid.
     """
-    sample_name = os.path.basename(bamfile).split('.')[0]
     parts = sample_name.split('-')
     if len(parts) < 3:
         print(f"{sample_name} is too short to determine sex. Returning N")
@@ -187,7 +186,7 @@ def main(input_bam, index_file, male_threshold, female_threshold):
     idxstat_output = run_samtools_idxstat(bam_file_name, bam_file_prefix)
     chr_1, chr_y, score = get_mapped_reads(idxstat_output)
     predicted_sex = get_predicted_sex(score, male_threshold, female_threshold)
-    reported_sex = get_reported_sex(bam_file_name)
+    reported_sex = get_reported_sex(bam_file_prefix)
     matched = check_sex_match(reported_sex, predicted_sex)
 
     # format output to mqc json
