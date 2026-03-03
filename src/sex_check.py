@@ -62,9 +62,9 @@ def get_mapped_reads(filename):
     with open(filename, encoding="utf-8") as file:
         reader = csv.reader(file, delimiter="\t")
         for line in reader:
-            if line[0] == "1":
+            if line[0] == "1" or line[0] == "chr1":
                 chr_1 = int(line[2])
-            elif line[0] == "Y":
+            elif line[0] == "Y" or line[0] == "chrY":
                 chr_y = int(line[2])
 
     if not chr_1:
@@ -82,6 +82,7 @@ def get_reported_sex(sample_name):
     """
     Extracts the reported sex from a sample name based on its naming convention.
     e.g. "X12345-GM1234567-23xxxx4-1234-F-12345678"
+    or "X12345-GM1234567-23xxxx4-1234-F" for TSO500
     Returns 'N' if the sex cannot be determined or is not 'M', 'F', or 'U'.
 
     Args:
@@ -97,12 +98,14 @@ def get_reported_sex(sample_name):
         print(f"{sample_name} is too short to determine sex. Returning N")
         return "N"
 
-    sex = parts[-2].upper()
-    if sex not in ["M", "F", "U"]:
-        print(f"Extracted {sex} from {sample_name} is invalid. Returning N")
-        return "N"
-
-    return sex
+    # check both naming conventions
+    for part in (parts[-2], parts[-1]):
+        sex = part.upper()
+        if sex in ["M", "F", "U"]:
+            return sex
+    
+    print(f"Extracted sex from {sample_name} is invalid. Returning N")
+    return "N"
 
 
 def get_predicted_sex(score, male_threshold, female_threshold):
@@ -178,12 +181,14 @@ def main(input_bam, index_file, male_threshold, female_threshold):
     shutil.move(inputs['index_file_path'][0], os.getcwd())
 
     bam_file_name = inputs['input_bam_name'][0]
-    bam_file_prefix = inputs['input_bam_prefix'][0].rstrip('_markdup')
+    bam_file_prefix = inputs['input_bam_prefix'][0]
+    if bam_file_prefix.endswith('_markdup'):
+        bam_file_prefix = bam_file_prefix[:-len('_markdup')]
 
     idxstat_output = run_samtools_idxstat(bam_file_name, bam_file_prefix)
     chr_1, chr_y, score = get_mapped_reads(idxstat_output)
     predicted_sex = get_predicted_sex(score, male_threshold, female_threshold)
-    reported_sex = get_reported_sex(bam_file_name)
+    reported_sex = get_reported_sex(bam_file_prefix)
     matched = check_sex_match(reported_sex, predicted_sex)
 
     # format output to mqc json
