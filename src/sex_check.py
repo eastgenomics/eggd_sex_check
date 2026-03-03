@@ -78,31 +78,35 @@ def get_mapped_reads(filename):
     return chr_1, chr_y, score
 
 
-def get_reported_sex(sample_name):
+def get_reported_sex(bamfile):
     """
-    Extracts the reported sex from a sample name based on its naming convention.
-    e.g. "X12345-GM1234567-23xxxx4-1234-F-12345678"
+    Extracts the reported sex from a filename based on its naming convention.
+    e.g. "X12345-GM1234567-23xxxx4-1234-F-12345678.bam"
+    or "X12345-GM1234567-23xxxx4-1234-F.bam" for TSO500
     Returns 'N' if the sex cannot be determined or is not 'M', 'F', or 'U'.
 
     Args:
-        sample_name (str): The name of the sample, expected to contain the 
+        bamfile (str): The name of the bam file, expected to contain the 
         sex information.
 
     Returns:
         str: The reported sex extracted from the sample name or 'N' if 
         undetermined or invalid.
     """
+    sample_name = os.path.basename(bamfile).split('.')[0]
     parts = sample_name.split('-')
     if len(parts) < 3:
         print(f"{sample_name} is too short to determine sex. Returning N")
         return "N"
 
-    sex = parts[-2].upper()
-    if sex not in ["M", "F", "U"]:
-        print(f"Extracted {sex} from {sample_name} is invalid. Returning N")
-        return "N"
-
-    return sex
+    # check both naming conventions
+    for part in (parts[-2], parts[-1]):
+        sex = part.upper()
+        if sex in ["M", "F", "U"]:
+            return sex
+    
+    print(f"Extracted sex from {sample_name} is invalid. Returning N")
+    return "N"
 
 
 def get_predicted_sex(score, male_threshold, female_threshold):
