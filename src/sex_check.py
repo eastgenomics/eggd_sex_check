@@ -181,7 +181,9 @@ def main(input_bam, index_file, male_threshold, female_threshold):
     shutil.move(inputs['index_file_path'][0], os.getcwd())
 
     bam_file_name = inputs['input_bam_name'][0]
-    bam_file_prefix = inputs['input_bam_prefix'][0].rstrip('_markdup')
+    bam_file_prefix = inputs['input_bam_prefix'][0]
+    if bam_file_prefix.endswith('_markdup'):
+        bam_file_prefix = bam_file_prefix[:-len('_markdup')]
 
     idxstat_output = run_samtools_idxstat(bam_file_name, bam_file_prefix)
     chr_1, chr_y, score = get_mapped_reads(idxstat_output)
